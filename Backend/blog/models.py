@@ -8,8 +8,8 @@ from django.core.validators import RegexValidator
 def img_path(instance, filename):
 	# test for instance.title and instance.email
 	if isinstance(instance, MyUser):
-		return './'.join(['avatars', instance.email, filename])
-	return './'.join(['img', instance.title, filename])
+		return '/'.join(['avatars', instance.email, filename])
+	return '/'.join(['img', instance.title, filename])
 
 
 class Post(models.Model):
@@ -75,11 +75,14 @@ class UserManager(BaseUserManager):
 	def create_superuser(self, email, password, **extra_fields):
 		extra_fields.setdefault('is_staff', True)
 		extra_fields.setdefault('is_superuser', True)
+		extra_fields.setdefault('is_active', True)
 
 		if extra_fields.get('is_staff') is not True:
 			raise ValueError('Superuser must have is_staff=True.')
 		if extra_fields.get('is_superuser') is not True:
 			raise ValueError('Superuser must have is_superuser=True.')
+		if extra_fields.get('is_active') is not True:
+			raise ValidationError('Superuser must have is_active=True by default.')
 		return self._create_user(email, password, **extra_fields)
 
 
@@ -107,3 +110,12 @@ class MyUser(AbstractUser):
 	def __str__(self):
 		return self.email
 
+
+class OtpModel(models.Model):
+	otp 			= models.IntegerField()
+	email 			= models.EmailField(blank=False, unique=True)
+	time 			= models.DateTimeField(auto_now_add=True)
+
+	def __str__(self):
+		name = str(self.otp) + ' of ' + str(self.email)
+		return name
