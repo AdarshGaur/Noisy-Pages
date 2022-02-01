@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+./Backend/todo-features.txt
 
 # C extensions
 *.so
