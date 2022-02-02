@@ -1,24 +1,20 @@
 import datetime
 from random import randint
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import render
 
 from rest_framework import generics, serializers, status, permissions
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import (
-	MyUser,
-	OtpModel,
-	Comment,
-	Post,
-)
 
-from .serializer import (
-	RegisterUser,
-	PostSerializer,
-)
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
+from .models import *
+from .serializer import *
 
 class ListPosts(generics.ListAPIView):
 	queryset = Post.objects.all()
@@ -79,6 +75,16 @@ class RegisterUserView(APIView):
 		return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 
+def GiveToken(user):
+	r_token = TokenObtainPairSerializer().get_token(user)
+	a_token = AccessToken().for_user(user)
+	token = {
+		'refresh' : str(r_token),
+		'access': str(a_token),
+	}
+	return token
+
+
 class VerifyOTP(APIView):
 	permission_class = [permissions.AllowAny]
 
@@ -86,6 +92,8 @@ class VerifyOTP(APIView):
 		email = request.data.get('email')
 		# check for the is_active of the user, it should be false
 		otp = request.data.get('otp')
+		if not otp.isnumeric():
+			return Response({'message': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 		try:
 			email_to_verify = OtpModel.objects.get(email__iexact=email)
 		except OtpModel.DoesNotExist:
@@ -108,7 +116,7 @@ class VerifyOTP(APIView):
 		email_to_verify.delete()
 
 		# introduce token here later
-		token = {'message': "opt verified"}
+		token = GiveToken(user_to_allow)
 		return Response(token, status=status.HTTP_200_OK)
 
 
@@ -117,6 +125,10 @@ class ResendOtp(APIView):
 	
 	def post(self, request, format=None):
 		email = request.data.get('email')
+		try:
+			user = MyUser.objects.get(email__iexact=email)
+		except MyUser.DoesNotExist:
+			return Response({'message':'Register First'}, status=status.HTTP_401_UNAUTHORIZED)
 		message = Verification(email)
 		return Response(message, status=status.HTTP_200_OK)
 
@@ -163,8 +175,7 @@ class NewPassword(APIView):
 		user.save()
 
 		#token
-		message = {'message': 'Password Changed'}
-		return Response(message, status=status.HTTP_202_ACCEPTED)
-
+		token = GiveToken(user)
+		return Response(token, status=status.HTTP_202_ACCEPTED)
 
 

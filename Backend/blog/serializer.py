@@ -1,10 +1,8 @@
+from django.core import exceptions
 from rest_framework import serializers
+from rest_framework.fields import CurrentUserDefault
 from django.contrib.auth import password_validation
-from .models import (
-	Post,
-	MyUser,
-	Comment,
-)
+from .models import *
 
 class PostSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -22,6 +20,25 @@ class PostSerializer(serializers.ModelSerializer):
 		]
 
 
+def ValidPassword(password, confirm_password, username):
+	errors = dict()
+	
+	if password != confirm_password:
+		errors['password_error'] =  ('Both Passwords must match.')
+	elif len(username) and username.casefold() in password.casefold():
+		errors['password_error'] = ('The password is too similar to the username.')
+	else:
+		try:
+			password_validation.validate_password(password)
+		except exceptions.ValidationError as e:
+			errors['password_error'] = list(e.messages)
+	
+	if errors:
+		return errors
+	return ()
+
+
+
 class RegisterUser(serializers.ModelSerializer):
 	confirm_password = serializers.CharField(style={'input_type': "password"}, write_only=True,)
 
@@ -31,12 +48,15 @@ class RegisterUser(serializers.ModelSerializer):
 		extra_kwargs = {'password': {'write_only':True}}
 	
 	def create(self, validated_data):
+		username = validated_data['username']
 		password = validated_data['password']
 		confirm_password = validated_data['confirm_password']
-
-		if password != confirm_password:
-			raise serializers.ValidationError({'password_error': 'Both Passwords must match.'})
-
+		
+		errors = ValidPassword(password, confirm_password, username)
+		
+		if errors:
+			raise serializers.ValidationError(errors)
+		
 		user = MyUser.objects.create(
 			username = validated_data['username'],
 			name = validated_data['name'],
@@ -48,5 +68,4 @@ class RegisterUser(serializers.ModelSerializer):
 		user.save()
 
 		return user
-
 
