@@ -3,9 +3,8 @@ from random import randint
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.shortcuts import render
 
-from rest_framework import generics, serializers, status, permissions
+from rest_framework import generics, status, permissions
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,17 +12,75 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
+import blog
+
 from .models import *
 from .serializer import *
+from .permission import IsAuthorOrReadOnly
 
-class ListPosts(generics.ListAPIView):
-	queryset = Post.objects.all()
-	serializer_class = PostSerializer
 
-class DetailPosts(generics.RetrieveUpdateDestroyAPIView):
-	queryset = Post.objects.all()
-	serializer_class = PostSerializer
 
+class BlogView(APIView):
+	permission_class = [permissions.IsAuthenticatedOrReadOnly]
+	
+	def get(self, request, format=None):
+		queryset = Post.objects.all()
+		serializer = BlogSerializer(queryset, many=True)
+		return Response(serializer.data)
+	
+	def post(self, request, format=None):
+		author = request.user
+		serializer = BlogSerializer(data=request.data)
+		if serializer.is_valid():
+			serializer.save(author=author)
+			return Response(serializer.data, status=status.HTTP_201_CREATED)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BlogDetail(APIView):
+	permission_class = [IsAuthorOrReadOnly]
+	
+	def get_blog_object(self, pk):
+		try:
+			blog = Post.objects.get(pk=pk)
+		except Post.DoesNotExist:
+			raise Response({'message':'Blog Does Not Exist.'}, status=status.HTTP_400_BAD_REQUEST)
+		return blog
+	
+	def get(self, request, pk, format=None):
+		blog = self.get_blog_object(pk)
+		serializer = BlogSerializer(blog, context={'request':request})
+		print(blog)
+		return Response(serializer.data)
+	
+	def put(self, request, pk, format=None):
+		blog = self.get_blog_object(pk)
+		serializer = PostSerializer(blog, data=request.data, partial=True, context={'request':request})
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+		return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
+	
+	def delete(self, request, pk, format=None):
+		blog = self.get_blog_object(pk)
+		blog.delete()
+		return Response({'message':'Blog Deleted Successfully'}, status=status.HTTP_200_OK)
+
+
+class UserDetail(APIView):
+	def get(self, request, pk, format=None):
+		try:
+			user = MyUser.objects.get(pk=pk)
+			print(str(user))
+		except MyUser.DoesNotExist:
+			return Response({'message':'User Does Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		serializer = UserDetailSerializer(user, context={'request':request})
+		print(user)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+		
 
 def Verification(email):
 	# First create the otp object and save it

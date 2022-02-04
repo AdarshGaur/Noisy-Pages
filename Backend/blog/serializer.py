@@ -1,10 +1,13 @@
+import math
 from django.core import exceptions
 from rest_framework import serializers
-from rest_framework.fields import CurrentUserDefault
 from django.contrib.auth import password_validation
 from .models import *
 
-class PostSerializer(serializers.ModelSerializer):
+
+class BlogSerializer(serializers.ModelSerializer):
+	read_time = serializers.SerializerMethodField()
+	
 	class Meta:
 		model = Post
 		fields = [
@@ -17,7 +20,14 @@ class PostSerializer(serializers.ModelSerializer):
 			'modified_on',
 			'likes',
 			'author',
+			'read_time',
 		]
+	
+	def get_read_time(self, blog):
+		length = len(blog.content)
+		minutes = math.floor(length/240)
+		return minutes
+
 
 
 def ValidPassword(password, confirm_password, username):
@@ -66,6 +76,22 @@ class RegisterUser(serializers.ModelSerializer):
 		user.set_password(password)
 		user.is_active = False
 		user.save()
-
 		return user
 
+
+class UserDetailSerializer(serializers.ModelSerializer):
+	
+	class Meta:
+		model = MyUser
+		fields = [
+			'username',
+			'email',
+			'name',
+			'date_joined',
+			'last_login',
+			'followers',
+			'following',
+			'avatar',
+			'bookmark_count',
+			'post_count',
+		]

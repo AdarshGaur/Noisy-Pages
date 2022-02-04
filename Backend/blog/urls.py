@@ -1,10 +1,15 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
+from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
 
 urlpatterns = [
-	path('', views.ListPosts.as_view()),
-	path('post/<int:pk>/', views.DetailPosts.as_view()),
+	#Post Related Routes
+	path('blog/', views.BlogView.as_view()),						# To List all blogs or Create a new post
+	path('blog/<int:pk>/', views.BlogDetail.as_view()),				# To Get the detail view of blogs
+	
+	#User Related Routes
+	path('user/<int:pk>/', views.UserDetail.as_view()),				# To Get the detials of a user
 
 	#Authentication Related Routes
 	path('auth/login/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
@@ -17,3 +22,4 @@ urlpatterns = [
 ]
 
 
+urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json'])
