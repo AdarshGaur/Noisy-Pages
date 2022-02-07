@@ -9,7 +9,7 @@ class BlogSerializer(serializers.ModelSerializer):
 	read_time = serializers.SerializerMethodField()
 	
 	class Meta:
-		model = Post
+		model = Blog
 		fields = [
 			'id',
 			'title',
@@ -27,6 +27,11 @@ class BlogSerializer(serializers.ModelSerializer):
 		length = len(blog.content)
 		minutes = math.floor(length/240)
 		return minutes
+	
+class PostBlogSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Blog
+		fields = ['title', 'content', 'category', 'thumbnail',]
 
 
 
@@ -46,7 +51,6 @@ def ValidPassword(password, confirm_password, username):
 	if errors:
 		return errors
 	return ()
-
 
 
 class RegisterUser(serializers.ModelSerializer):
@@ -80,6 +84,8 @@ class RegisterUser(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+	folower_count = serializers.SerializerMethodField()
+	
 	class Meta:
 		model = MyUser
 		fields = [
@@ -87,12 +93,15 @@ class UserDetailSerializer(serializers.ModelSerializer):
 			'username',
 			'email',
 			'name',
+			'follower_count',
 			'date_joined',
 			'last_login',
-			'followers',
-			'following',
 			'avatar',
 			'bookmark_count',
-			'post_count',
+			'blog_count',
 		]
+	
+	def get_follower_count(self, MyUser):
+		return self.followers.count()
+	
 

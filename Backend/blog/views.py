@@ -23,15 +23,15 @@ class BlogView(APIView):
 	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 	
 	def get(self, request, format=None):
-		queryset = Post.objects.all()
+		queryset = Blog.objects.all()
 		serializer = BlogSerializer(queryset, many=True)
 		return Response(serializer.data)
 	
 	def post(self, request, format=None):
-		author = request.user
-		serializer = BlogSerializer(data=request.data)
+		user = request.user
+		serializer = PostBlogSerializer(data=request.data)
 		if serializer.is_valid():
-			serializer.save(author=author)
+			serializer.save(author=user)
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -41,8 +41,8 @@ class BlogDetail(APIView):
 	
 	def get_blog_object(self, pk):
 		try:
-			blog = Post.objects.get(pk=pk)
-		except Post.DoesNotExist:
+			blog = Blog.objects.get(pk=pk)
+		except Blog.DoesNotExist:
 			raise Response({'message':'Blog Does Not Exist.'}, status=status.HTTP_400_BAD_REQUEST)
 		return blog
 	
@@ -97,7 +97,7 @@ class MyBlogs(APIView):
 	
 	def get(self, request, format=None):
 		user = request.user
-		queryset = Post.objects.filter(author=user)
+		queryset = Blog.objects.filter(author=user)
 		serializer = BlogSerializer(queryset, many=True, context={'request':request})
 		return Response(serializer.data)
 
