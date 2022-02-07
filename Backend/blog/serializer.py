@@ -80,10 +80,10 @@ class RegisterUser(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-	
 	class Meta:
 		model = MyUser
 		fields = [
+			'id',
 			'username',
 			'email',
 			'name',
@@ -95,3 +95,4 @@ class UserDetailSerializer(serializers.ModelSerializer):
 			'bookmark_count',
 			'post_count',
 		]
+
