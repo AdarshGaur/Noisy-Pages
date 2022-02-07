@@ -1,4 +1,5 @@
 import datetime
+from functools import partial
 from random import randint
 
 from django.conf import settings
@@ -12,8 +13,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
-import blog
-
 from .models import *
 from .serializer import *
 from .permission import IsAuthorOrReadOnly
@@ -21,7 +20,7 @@ from .permission import IsAuthorOrReadOnly
 
 
 class BlogView(APIView):
-	permission_class = [permissions.IsAuthenticatedOrReadOnly]
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 	
 	def get(self, request, format=None):
 		queryset = Post.objects.all()
@@ -38,7 +37,7 @@ class BlogView(APIView):
 
 
 class BlogDetail(APIView):
-	permission_class = [IsAuthorOrReadOnly]
+	permission_classes = [IsAuthorOrReadOnly]
 	
 	def get_blog_object(self, pk):
 		try:
@@ -55,7 +54,7 @@ class BlogDetail(APIView):
 	
 	def put(self, request, pk, format=None):
 		blog = self.get_blog_object(pk)
-		serializer = PostSerializer(blog, data=request.data, partial=True, context={'request':request})
+		serializer = BlogSerializer(blog, data=request.data, partial=True, context={'request':request})
 		if serializer.is_valid():
 			serializer.save()
 			return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
@@ -68,6 +67,7 @@ class BlogDetail(APIView):
 
 
 class UserDetail(APIView):
+	
 	def get(self, request, pk, format=None):
 		try:
 			user = MyUser.objects.get(pk=pk)
@@ -80,7 +80,27 @@ class UserDetail(APIView):
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-		
+class UpdateAvatar(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	
+	def put(self, request, format=None):
+		user = request.user
+		serializer = UserDetailSerializer(user, data=request.data, partial=True, context={'request': request})
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MyBlogs(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	
+	def get(self, request, format=None):
+		user = request.user
+		queryset = Post.objects.filter(author=user)
+		serializer = BlogSerializer(queryset, many=True, context={'request':request})
+		return Response(serializer.data)
+
 
 def Verification(email):
 	# First create the otp object and save it
@@ -107,9 +127,17 @@ def Verification(email):
 	message = {'message': 'Otp Sended Successfully'}
 	return message
 
+def GiveToken(user):
+	r_token = TokenObtainPairSerializer().get_token(user)
+	a_token = AccessToken().for_user(user)
+	token = {
+		'refresh' : str(r_token),
+		'access': str(a_token),
+	}
+	return token
+
 
 class RegisterUserView(APIView):
-	permission_class = [permissions.AllowAny]
 
 	def post(self, request, format=None):
 		email = request.data.get('email')
@@ -132,18 +160,7 @@ class RegisterUserView(APIView):
 		return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 
-def GiveToken(user):
-	r_token = TokenObtainPairSerializer().get_token(user)
-	a_token = AccessToken().for_user(user)
-	token = {
-		'refresh' : str(r_token),
-		'access': str(a_token),
-	}
-	return token
-
-
 class VerifyOTP(APIView):
-	permission_class = [permissions.AllowAny]
 
 	def post(self, request):
 		email = request.data.get('email')
@@ -178,7 +195,6 @@ class VerifyOTP(APIView):
 
 
 class ResendOtp(APIView):
-	permission_classes = [permissions.AllowAny]
 	
 	def post(self, request, format=None):
 		email = request.data.get('email')
@@ -191,7 +207,6 @@ class ResendOtp(APIView):
 
 
 class ForgotPassword(APIView):
-	permission_classes = [permissions.AllowAny]
 
 	def post(self, request, format=None):
 		email = request.data.get('email')
@@ -211,7 +226,6 @@ class ForgotPassword(APIView):
 
 
 class NewPassword(APIView):
-	permission_classes = [permissions.AllowAny]
 
 	def post(self, request, format=None):
 		email = request.data.get('email')
