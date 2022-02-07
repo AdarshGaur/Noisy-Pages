@@ -29,10 +29,6 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'blog.MyUser'
-AUTHENTICATION_BACKENDS = (
-	'django.contrib.auth.backends.AllowAllUsersModelBackend',
-	'blog.backends.CaseInsensitiveModelBackend',
-)
 
 # Application definition
 
@@ -51,6 +47,13 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
 	'DEFAULT_AUTHENTICATION_CLASSES': [
 		'rest_framework_simplejwt.authentication.JWTAuthentication',
+	],
+	'DEFAULT_PERMISSION_CLASSES': [
+		'rest_framework.permissions.AllowAny',
+	],
+	'DEFAULT_AUTHENTICATION_BACKENDS': [
+		'django.contrib.auth.backends.AllowAllUsersModelBackend',
+		'blog.backends.CaseInsensitiveModelBackend',
 	]
 }
 
