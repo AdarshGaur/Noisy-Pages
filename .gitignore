@@ -2,8 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Custom ignores
 todo-features.txt
 media/
+blog/migrations/
 
 # C extensions
 *.so
