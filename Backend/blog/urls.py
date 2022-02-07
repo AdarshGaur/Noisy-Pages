@@ -7,9 +7,12 @@ urlpatterns = [
 	#Post Related Routes
 	path('blog/', views.BlogView.as_view()),						# To List all blogs or Create a new post
 	path('blog/<int:pk>/', views.BlogDetail.as_view()),				# To Get the detail view of blogs
+
 	
 	#User Related Routes
 	path('user/<int:pk>/', views.UserDetail.as_view()),				# To Get the detials of a user
+	path('user/my-blogs/', views.MyBlogs.as_view()),				# To Get the detials of a user
+	path('user/update-avatar/', views.UpdateAvatar.as_view()),		# To Change the avatar of the user
 
 	#Authentication Related Routes
 	path('auth/login/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
