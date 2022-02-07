@@ -110,6 +110,8 @@ class MyUser(AbstractUser):
 	def __str__(self):
 		return self.email
 	
+	def count_follower(self):
+		return self.followers.count()
 
 
 class OtpModel(models.Model):

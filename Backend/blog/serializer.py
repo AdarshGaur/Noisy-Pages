@@ -27,7 +27,8 @@ class BlogSerializer(serializers.ModelSerializer):
 		length = len(blog.content)
 		minutes = math.floor(length/240)
 		return minutes
-	
+
+
 class PostBlogSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Blog
@@ -84,7 +85,7 @@ class RegisterUser(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-	folower_count = serializers.SerializerMethodField()
+	follower_count = serializers.SerializerMethodField()
 	
 	class Meta:
 		model = MyUser
@@ -101,7 +102,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 			'blog_count',
 		]
 	
-	def get_follower_count(self, MyUser):
-		return self.followers.count()
+	def get_follower_count(self, user):
+		return user.count_follower()
 	
 

@@ -17,6 +17,8 @@ from .models import *
 from .serializer import *
 from .permission import IsAuthorOrReadOnly
 
+from django.db.models import Q, F
+
 
 
 class BlogView(APIView):
@@ -32,6 +34,8 @@ class BlogView(APIView):
 		serializer = PostBlogSerializer(data=request.data)
 		if serializer.is_valid():
 			serializer.save(author=user)
+			user.blog_count = F('blog_count')+1
+			user.save()
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -62,7 +66,12 @@ class BlogDetail(APIView):
 	
 	def delete(self, request, pk, format=None):
 		blog = self.get_blog_object(pk)
+		user = request.user
+		if user != blog.author:
+			return Response({'message':'Only Author can delete his/her blog.'}, status=status.HTTP_401_UNAUTHORIZED)
 		blog.delete()
+		user.blog_count = F('blog_count')-1
+		user.save()
 		return Response({'message':'Blog Deleted Successfully'}, status=status.HTTP_200_OK)
 
 
