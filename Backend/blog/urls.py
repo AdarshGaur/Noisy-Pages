@@ -4,8 +4,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
 
 urlpatterns = [
-	#Post Related Routes
-	path('blog/', views.BlogView.as_view()),						# To List all blogs or Create a new post
+	#Blog Related Routes
+	path('blog/', views.BlogView.as_view()),						# To List all blogs or Create a new Blog
 	path('blog/<int:pk>/', views.BlogDetail.as_view()),				# To Get the detail view of blogs
 
 	

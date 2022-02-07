@@ -3,7 +3,7 @@ from django.contrib import messages
 
 from .models import(
 	MyUser,
-	Post,
+	Blog,
 	Comment,
 	OtpModel,
 )
@@ -29,6 +29,6 @@ class MyUserAdmin(admin.ModelAdmin):
 
 
 admin.site.register(MyUser, MyUserAdmin)
-admin.site.register(Post)
+admin.site.register(Blog)
 admin.site.register(Comment)
 admin.site.register(OtpModel)

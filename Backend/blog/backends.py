@@ -1,4 +1,3 @@
-from sysconfig import get_scheme_names
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 
