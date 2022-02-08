@@ -7,6 +7,7 @@ urlpatterns = [
 	#Blog Related Routes
 	path('blog/', views.BlogView.as_view()),						# To List all blogs or Create a new Blog
 	path('blog/<int:pk>/', views.BlogDetail.as_view()),				# To Get the detail view of blogs
+	path('blog/<int:pk>/like/', views.LikeBlog.as_view()),			# To like the Blog
 
 	
 	#User Related Routes

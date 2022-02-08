@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -33,17 +34,20 @@ class Blog(models.Model):
 	author 			= models.ForeignKey(settings.AUTH_USER_MODEL, related_name='blogs', on_delete=models.CASCADE)
 	published_on	= models.DateTimeField(auto_now_add=True)
 	modified_on		= models.DateTimeField(auto_now=True)
-	likes 			= models.IntegerField(default=0)
+	likers 			= models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_by', blank=True)
 
 	def __str__(self):
 		return self.title
+	
+	def count_likes(self):
+		return self.likers.count()
 	
 	class Meta:
 		ordering = ['-published_on']
 
 
 class Comment(models.Model):
-	blog 			= models.ForeignKey(Blog, related_name='comments', on_delete=models.CASCADE)
+	blog 			= models.ForeignKey(Blog, related_name='comments_on', on_delete=models.CASCADE)
 	commenter 		= models.ForeignKey(settings.AUTH_USER_MODEL, related_name='commenter', on_delete=models.CASCADE)
 	content 		= models.TextField(blank=False, null=False)
 	created_on 		= models.DateTimeField(auto_now_add=True)
@@ -51,7 +55,7 @@ class Comment(models.Model):
 	
 	def __str__(self):
 			return 'comment {} on blog {} by {}'.format(self.content, self.blog, self.commenter)
-
+	
 	class Meta:
 		ordering = ['-created_on']
 
@@ -97,10 +101,11 @@ class MyUser(AbstractUser):
 	name 			= models.CharField(blank=False, max_length=50,validators=[name_regex])
 	date_joined 	= models.DateTimeField(auto_now_add=True)
 	last_login 		= models.DateTimeField(auto_now=True)
+	about 			= models.CharField(max_length=300, blank=True, null=True)
 	followers 		= models.ManyToManyField('self', blank=True, symmetrical=False, related_name='followed_by')
 	avatar 			= models.ImageField(upload_to=img_path, default='default-avatar.png')
-	bookmark_count 	= models.PositiveIntegerField(default=0)
-	blog_count 		= models.PositiveIntegerField(default=0)
+	bookmarks	 	= models.ManyToManyField(Blog, blank=True, related_name='my_bookmarks')
+	post_count 		= models.PositiveIntegerField(default=0)
 
 	USERNAME_FIELD = 'email'
 	REQUIRED_FIELDS = ['name', 'username']
@@ -110,8 +115,11 @@ class MyUser(AbstractUser):
 	def __str__(self):
 		return self.email
 	
-	def count_follower(self):
+	def count_followers(self):
 		return self.followers.count()
+	
+	def count_bookmarks(self):
+		return self.bookmarks.count()
 
 
 class OtpModel(models.Model):

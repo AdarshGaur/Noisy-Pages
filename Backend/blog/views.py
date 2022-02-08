@@ -17,7 +17,7 @@ from .models import *
 from .serializer import *
 from .permission import IsAuthorOrReadOnly
 
-from django.db.models import Q, F
+from django.db.models import F
 
 
 
@@ -34,7 +34,7 @@ class BlogView(APIView):
 		serializer = PostBlogSerializer(data=request.data)
 		if serializer.is_valid():
 			serializer.save(author=user)
-			user.blog_count = F('blog_count')+1
+			user.post_count = F('post_count')+1
 			user.save()
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -257,5 +257,24 @@ class NewPassword(APIView):
 		#token
 		token = GiveToken(user)
 		return Response(token, status=status.HTTP_202_ACCEPTED)
+
+
+class LikeBlog(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	def post(self, request, pk, format=None):
+		user = request.user
+		try:
+			blog = Blog.objects.get(pk=pk)
+		except Blog.DoesNotExist:
+			return Response({'message': "Blog Does Not Exist."}, status=status.HTTP_400_BAD_REQUEST)
+		
+		if blog.likers.filter(id=user.id).exists():
+			blog.likers.remove(user)
+			message = {'message': 'Unliked'}
+		else:
+			blog.likers.add(user)
+			message = {'message': 'Liked'}
+		
+		return Response(message, status=status.HTTP_200_OK)
 
 

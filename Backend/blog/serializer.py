@@ -7,6 +7,7 @@ from .models import *
 
 class BlogSerializer(serializers.ModelSerializer):
 	read_time = serializers.SerializerMethodField()
+	likes_count = serializers.SerializerMethodField()
 	
 	class Meta:
 		model = Blog
@@ -18,15 +19,20 @@ class BlogSerializer(serializers.ModelSerializer):
 			'thumbnail',
 			'published_on',
 			'modified_on',
-			'likes',
 			'author',
 			'read_time',
+			'likes_count',
 		]
 	
 	def get_read_time(self, blog):
 		length = len(blog.content)
 		minutes = math.floor(length/240)
 		return minutes
+	
+	def get_likes_count(self, blog):
+		return blog.likers.count()
+	
+	
 
 
 class PostBlogSerializer(serializers.ModelSerializer):
@@ -86,7 +92,8 @@ class RegisterUser(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
 	follower_count = serializers.SerializerMethodField()
-	
+	bookmark_count = serializers.SerializerMethodField()
+		
 	class Meta:
 		model = MyUser
 		fields = [
@@ -94,15 +101,19 @@ class UserDetailSerializer(serializers.ModelSerializer):
 			'username',
 			'email',
 			'name',
+			'about',
 			'follower_count',
 			'date_joined',
 			'last_login',
 			'avatar',
 			'bookmark_count',
-			'blog_count',
+			'post_count',
 		]
 	
 	def get_follower_count(self, user):
-		return user.count_follower()
+		return user.count_followers()
+	
+	def get_bookmark_count(self, user):
+		return user.count_bookmarks()
 	
 
