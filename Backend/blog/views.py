@@ -1,5 +1,6 @@
 import datetime
 from functools import partial
+from os import stat
 from random import randint
 
 from django.conf import settings
@@ -70,7 +71,7 @@ class BlogDetail(APIView):
 		if user != blog.author:
 			return Response({'message':'Only Author can delete his/her blog.'}, status=status.HTTP_401_UNAUTHORIZED)
 		blog.delete()
-		user.blog_count = F('blog_count')-1
+		user.post_count = F('post_count')-1
 		user.save()
 		return Response({'message':'Blog Deleted Successfully'}, status=status.HTTP_200_OK)
 
@@ -278,3 +279,20 @@ class LikeBlog(APIView):
 		return Response(message, status=status.HTTP_200_OK)
 
 
+class UserFollow(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	def post(self, request, pk, format=None):
+		user = request.user
+		try:
+			follow_to = MyUser.objects.get(pk=pk)
+		except MyUser.DoesNotExist:
+			return Response({'message':'User requested to follow Does Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		if follow_to.followers.filter(id=user.id).exists():
+			follow_to.followers.remove(user)
+			message = {'message':'Unfollowed.'}
+		else:
+			follow_to.followers.add(user)
+			message = {'message':'Followed'}
+		
+		return Response(message, status=status.HTTP_200_OK)
