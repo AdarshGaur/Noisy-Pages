@@ -296,3 +296,22 @@ class UserFollow(APIView):
 			message = {'message':'Followed'}
 		
 		return Response(message, status=status.HTTP_200_OK)
+
+
+class BookmarkBlog(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	def post(self, request, pk, format=None):
+		user = request.user
+		try:
+			blog = Blog.objects.get(pk=pk)
+		except Blog.DoesNotExist:
+			return Response({'message':'Blog requested to Bookmark Does Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		if user.bookmarks.filter(id=blog.id).exists():
+			user.bookmarks.remove(blog)
+			message = {'message':'Bookmark removed Successfully.'}
+		else:
+			user.bookmarks.add(blog)
+			message = {'message':'Bookmark added Successfully.'}
+		
+		return Response(message, status=status.HTTP_200_OK)
