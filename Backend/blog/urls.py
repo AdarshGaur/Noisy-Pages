@@ -16,6 +16,10 @@ urlpatterns = [
 	path('user/my-blogs/', views.MyBlogs.as_view()),					# To Get the detials of a user
 	path('user/update-avatar/', views.UpdateAvatar.as_view()),			# To Change the avatar of the user
 	path('user/<int:pk>/follow/', views.UserFollow.as_view()),			# To Follow/Unfollow the user
+	path('user/saved/', views.MySavedBlogs.as_view()),					# To Get the saved/bookmarked blogs
+	path('user/followers/', views.MyFollowers.as_view()),				# To Get the list of my followers
+	path('user/followings/', views.MyFollowing.as_view()),				# To Get the list of my followings
+
 
 	#Authentication Related Routes
 	path('auth/login/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),

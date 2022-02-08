@@ -115,5 +115,11 @@ class UserDetailSerializer(serializers.ModelSerializer):
 	
 	def get_bookmark_count(self, user):
 		return user.count_bookmarks()
+
 	
+class UserCardSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = MyUser
+		fields = ['id', 'name', 'username', 'email', 'avatar', 'last_login',]
+
 

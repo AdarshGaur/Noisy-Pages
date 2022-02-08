@@ -1,5 +1,6 @@
 import datetime
 from functools import partial
+from math import perm
 from os import stat
 from random import randint
 
@@ -288,6 +289,9 @@ class UserFollow(APIView):
 		except MyUser.DoesNotExist:
 			return Response({'message':'User requested to follow Does Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
 		
+		if follow_to == user:
+			return Response({'message':'User cannot follow themself.'}, status=status.HTTP_400_BAD_REQUEST)
+		
 		if follow_to.followers.filter(id=user.id).exists():
 			follow_to.followers.remove(user)
 			message = {'message':'Unfollowed.'}
@@ -315,3 +319,32 @@ class BookmarkBlog(APIView):
 			message = {'message':'Bookmark added Successfully.'}
 		
 		return Response(message, status=status.HTTP_200_OK)
+
+
+class MySavedBlogs(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	def get(self, request, format=None):
+		user = request.user
+		saved_blogs = user.bookmarks.all()
+		serializer = BlogSerializer(saved_blogs, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+	
+
+class MyFollowers(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	def get(self, request, format=None):
+		user = request.user
+		followers = user.followers.all()
+		serializer = UserCardSerializer(followers, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MyFollowing(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+	def get(self, request, format=None):
+		user = request.user
+		followings = MyUser.objects.filter(followers=user)
+		serializer = UserCardSerializer(followings, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+	
+
