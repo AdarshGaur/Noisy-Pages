@@ -26,13 +26,11 @@ class BlogSerializer(serializers.ModelSerializer):
 	
 	def get_read_time(self, blog):
 		length = len(blog.content)
-		minutes = math.floor(length/240)
+		minutes = math.floor(length/150)
 		return minutes
 	
 	def get_likes_count(self, blog):
 		return blog.likers.count()
-	
-	
 
 
 class PostBlogSerializer(serializers.ModelSerializer):
@@ -123,3 +121,18 @@ class UserCardSerializer(serializers.ModelSerializer):
 		fields = ['id', 'name', 'username', 'email', 'avatar', 'last_login',]
 
 
+class CommentSerializer(serializers.ModelSerializer):
+	img = serializers.SerializerMethodField()
+	
+	class Meta:
+		model = Comment
+		fields = ['id', 'author', 'content', 'created_on', 'modified_on', 'img',]
+	
+	def get_img(self, comment):
+		return comment.author.avatar.url
+
+
+class PostCommentSerializer(serializers.ModelSerializer):	
+	class Meta:
+		model = Comment
+		fields = ['content',]

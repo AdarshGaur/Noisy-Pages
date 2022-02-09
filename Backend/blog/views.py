@@ -1,11 +1,11 @@
+from ast import Delete
 import datetime
-from functools import partial
-from math import perm
-from os import stat
+import http
 from random import randint
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.http import Http404
 
 from rest_framework import generics, status, permissions
 
@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from .models import *
 from .serializer import *
-from .permission import IsAuthorOrReadOnly
+from .permission import IsAuthorOrReadOnly, IsCommenterorAuthor
 
 from django.db.models import F
 
@@ -45,32 +45,32 @@ class BlogView(APIView):
 class BlogDetail(APIView):
 	permission_classes = [IsAuthorOrReadOnly]
 	
-	def get_blog_object(self, pk):
+	def get_blog_object(self, request, pk):
 		try:
 			blog = Blog.objects.get(pk=pk)
 		except Blog.DoesNotExist:
-			raise Response({'message':'Blog Does Not Exist.'}, status=status.HTTP_400_BAD_REQUEST)
+			raise Http404
 		return blog
 	
 	def get(self, request, pk, format=None):
-		blog = self.get_blog_object(pk)
+		blog = self.get_blog_object(request, pk)
 		serializer = BlogSerializer(blog, context={'request':request})
 		print(blog)
 		return Response(serializer.data)
 	
 	def put(self, request, pk, format=None):
-		blog = self.get_blog_object(pk)
+		blog = self.get_blog_object(request, pk)
 		serializer = BlogSerializer(blog, data=request.data, partial=True, context={'request':request})
+		self.check_object_permissions(request, blog)
 		if serializer.is_valid():
 			serializer.save()
 			return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 		return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
 	
 	def delete(self, request, pk, format=None):
-		blog = self.get_blog_object(pk)
+		blog = self.get_blog_object(request, pk)
 		user = request.user
-		if user != blog.author:
-			return Response({'message':'Only Author can delete his/her blog.'}, status=status.HTTP_401_UNAUTHORIZED)
+		self.check_object_permissions(request, blog)
 		blog.delete()
 		user.post_count = F('post_count')-1
 		user.save()
@@ -84,7 +84,7 @@ class UserDetail(APIView):
 			user = MyUser.objects.get(pk=pk)
 			print(str(user))
 		except MyUser.DoesNotExist:
-			return Response({'message':'User Does Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+			raise Http404
 		
 		serializer = UserDetailSerializer(user, context={'request':request})
 		print(user)
@@ -268,7 +268,7 @@ class LikeBlog(APIView):
 		try:
 			blog = Blog.objects.get(pk=pk)
 		except Blog.DoesNotExist:
-			return Response({'message': "Blog Does Not Exist."}, status=status.HTTP_400_BAD_REQUEST)
+			raise Http404
 		
 		if blog.likers.filter(id=user.id).exists():
 			blog.likers.remove(user)
@@ -287,7 +287,7 @@ class UserFollow(APIView):
 		try:
 			follow_to = MyUser.objects.get(pk=pk)
 		except MyUser.DoesNotExist:
-			return Response({'message':'User requested to follow Does Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+			raise Http404
 		
 		if follow_to == user:
 			return Response({'message':'User cannot follow themself.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -309,7 +309,7 @@ class BookmarkBlog(APIView):
 		try:
 			blog = Blog.objects.get(pk=pk)
 		except Blog.DoesNotExist:
-			return Response({'message':'Blog requested to Bookmark Does Not Exist'}, status=status.HTTP_400_BAD_REQUEST)
+			raise Http404
 		
 		if user.bookmarks.filter(id=blog.id).exists():
 			user.bookmarks.remove(blog)
@@ -347,4 +347,63 @@ class MyFollowing(APIView):
 		serializer = UserCardSerializer(followings, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
 	
+
+class CommentView(APIView):
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+	
+	def find_blog(self, pk):
+		try:
+			blog = Blog.objects.get(pk=pk)
+		except Blog.DoesNotExist :
+			raise Http404
+		return blog
+	
+	def get(self, request, pk, format=None):
+		blog = self.find_blog(pk)
+		comments = blog.comments.all()
+		serializer = CommentSerializer(comments, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+	
+	def post(self, request, pk, format=None):
+		user = request.user
+		blog = self.find_blog(pk)
+		serializer = PostCommentSerializer(data=request.data)
+		if serializer.is_valid():
+			serializer.save(author=user, blog=blog)
+			return Response({'message':'Comment Posted.'}, status=status.HTTP_201_CREATED)
+		return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+class UpdateComment(APIView):
+	permission_classes = [IsCommenterorAuthor]
+	
+	def find_blog(self, pk):
+		try:
+			blog = Blog.objects.get(pk=pk)
+		except Blog.DoesNotExist :
+			raise Http404
+		return blog
+	
+	def put(self, request, pk, pk_alt, format=None):
+		blog = self.find_blog(pk=pk)
+		try:
+			comment = Comment.objects.get(pk=pk_alt)
+		except Comment.DoesNotExist:
+			return Response({'message':'Comment Does Not Exists.'}, status=status.HTTP_400_BAD_REQUEST)
+		self.check_object_permissions(request, comment)
+		serializer = PostCommentSerializer(comment, data=request.data, partial=True)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+		return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
+		
+	def delete(self, request, pk, pk_alt, format=None):
+		blog = self.find_blog(pk=pk)
+		try:
+			comment = Comment.objects.get(pk=pk_alt)
+		except Comment.DoesNotExist:
+			return Response({'message':'Comment Does Not Exist.'}, status=status.HTTP_400_BAD_REQUEST)
+		self.check_object_permissions(request, comment)
+		comment.delete()
+		return Response({'message':'Comment Deleted Successfully.'}, status=status.HTTP_200_OK)
 
