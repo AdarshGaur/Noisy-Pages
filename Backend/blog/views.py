@@ -54,7 +54,23 @@ class BlogDetail(APIView):
 	
 	def get(self, request, pk, format=None):
 		blog = self.get_blog_object(request, pk)
-		serializer = BlogSerializer(blog, context={'request':request})
+		is_bookmarked = is_liked = is_author = False
+		if not request.user.is_anonymous:
+			if blog.likers.filter(pk=request.user.pk).exists():
+				is_liked = True
+			if request.user.bookmarks.filter(pk=pk).exists():
+				is_bookmarked = True
+			if request.user == blog.author:
+				is_author = True
+		serializer = BlogSerializer(
+			blog,
+			context={
+				'request' : request,
+				'is_bookmarked' : is_bookmarked,
+				'is_liked' : is_liked,
+				'is_author': is_author,
+			}
+		)
 		print(blog)
 		return Response(serializer.data)
 	

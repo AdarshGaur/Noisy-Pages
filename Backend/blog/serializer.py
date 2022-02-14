@@ -8,6 +8,9 @@ from .models import *
 class BlogSerializer(serializers.ModelSerializer):
 	read_time = serializers.SerializerMethodField()
 	likes_count = serializers.SerializerMethodField()
+	is_liked = serializers.SerializerMethodField()
+	is_bookmark = serializers.SerializerMethodField()
+	is_author = serializers.SerializerMethodField()
 	
 	class Meta:
 		model = Blog
@@ -22,6 +25,9 @@ class BlogSerializer(serializers.ModelSerializer):
 			'author',
 			'read_time',
 			'likes_count',
+			'is_liked',
+			'is_bookmark',
+			'is_author',
 		]
 	
 	def get_read_time(self, blog):
@@ -31,6 +37,16 @@ class BlogSerializer(serializers.ModelSerializer):
 	
 	def get_likes_count(self, blog):
 		return blog.likers.count()
+	
+	def get_is_liked(self, blog):
+		return self.context.get('is_liked')
+	
+	def get_is_bookmark(self, blog):
+		return self.context.get('is_bookmarked')
+		
+	def get_is_author(self, blog):
+		return self.context.get('is_author')
+
 
 
 class PostBlogSerializer(serializers.ModelSerializer):
@@ -126,6 +142,7 @@ class CommentSerializer(serializers.ModelSerializer):
 	
 	class Meta:
 		model = Comment
+		# include author's username thorugh methodfield!
 		fields = ['id', 'author', 'content', 'created_on', 'modified_on', 'img',]
 	
 	def get_img(self, comment):
