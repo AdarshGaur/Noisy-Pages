@@ -19,7 +19,7 @@ class IsCommenterorAuthor(permissions.BasePermission):
 		return request.user.is_authenticated
 	
 	def has_object_permission(self, request, view, comment):
-		if request.method == 'PUT':
+		if request.method == 'PUT' or request.method == 'PATCH':
 			return request.user == comment.author
 		return request.user == comment.author or request.user == comment.blog.author
 			

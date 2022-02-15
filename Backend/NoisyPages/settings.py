@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = 'blog.MyUser'
+AUTH_USER_MODEL = 'Profile.MyUser'
 
 # Application definition
 
@@ -42,6 +42,8 @@ INSTALLED_APPS = [
 	'rest_framework',
 	'rest_framework.authtoken',
 	'blog',
+	'api',
+	'Profile',
 ]
 
 REST_FRAMEWORK = {
@@ -53,7 +55,7 @@ REST_FRAMEWORK = {
 	],
 	'DEFAULT_AUTHENTICATION_BACKENDS': [
 		'django.contrib.auth.backends.AllowAllUsersModelBackend',
-		'blog.backends.CaseInsensitiveModelBackend',
+		'auth.backends.CaseInsensitiveModelBackend',
 	]
 }
 
