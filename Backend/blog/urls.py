@@ -5,7 +5,7 @@ from .views import *
 
 urlpatterns = [
 	#Blog Related Routes
-	path('', ListBlogView.as_view()),
+	path('', BlogView.as_view()),
 	path('blog/', BlogView.as_view()),										# To List all blogs or Create a new Blog
 	path('blog/<int:pk>/', BlogDetail.as_view()),							# To Get the detail view of blogs
 	path('blog/<int:pk>/like/', LikeBlog.as_view()),						# To Like/Unlike the Blog

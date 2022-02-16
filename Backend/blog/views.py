@@ -1,5 +1,3 @@
-from asyncio import QueueEmpty
-from email.policy import default
 from django.http import Http404
 from rest_framework import status, permissions
 
@@ -198,13 +196,6 @@ class CategoriesView(APIView):
 			queryset = Blog.objects.filter(category=category)
 		serializer = BlogSerializer(queryset, many=True)
 		return Response(serializer.data)
-
-
-class ListBlogView(APIView):
-	def get(self, request, format=None):
-		queryset = Blog.objects.all()
-		serializer = BlogSerializer(queryset, many=True)
-		return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SearchBlogView(APIView):
