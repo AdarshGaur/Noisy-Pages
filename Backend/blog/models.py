@@ -28,12 +28,10 @@ class Blog(models.Model):
 	published_on	= models.DateTimeField(auto_now_add=True)
 	modified_on		= models.DateTimeField(auto_now=True)
 	likers 			= models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_by', blank=True)
+	likes_count		= models.IntegerField(default=0)
 
 	def __str__(self):
 		return self.title
-	
-	def count_likes(self):
-		return self.likers.count()
 	
 	class Meta:
 		ordering = ['-published_on']

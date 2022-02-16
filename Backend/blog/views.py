@@ -1,10 +1,12 @@
+from asyncio import QueueEmpty
+from email.policy import default
 from django.http import Http404
 from rest_framework import status, permissions
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Blog, Comment
+from .models import *
 from .serializer import *
 from .permission import IsAuthorOrReadOnly, IsCommenterorAuthor
 
@@ -93,9 +95,11 @@ class LikeBlog(APIView):
 		
 		if blog.likers.filter(id=user.id).exists():
 			blog.likers.remove(user)
+			blog.likes_count = F('likes_count')-1
 			message = {'message': 'Unliked'}
 		else:
 			blog.likers.add(user)
+			blog.likes_count = F('likes_count')+1
 			message = {'message': 'Liked'}
 		
 		return Response(message, status=status.HTTP_200_OK)
@@ -178,4 +182,35 @@ class UpdateComment(APIView):
 		self.check_object_permissions(request, comment)
 		comment.delete()
 		return Response({'message':'Comment Deleted Successfully.'}, status=status.HTTP_200_OK)
+	
 
+class CategoriesView(APIView):
+	def post(self, request, format=None):
+		#filter by category given or including all
+		category = 'default'
+		given_category = request.data.get('category')
+		for choice in categories_choices:
+			if choice[0] == given_category or choice[1] == given_category:
+				category = choice[0]
+		if category == 'default':
+			queryset = Blog.objects.all()
+		else:
+			queryset = Blog.objects.filter(category=category)
+		serializer = BlogSerializer(queryset, many=True)
+		return Response(serializer.data)
+
+
+class ListBlogView(APIView):
+	def get(self, request, format=None):
+		queryset = Blog.objects.all()
+		serializer = BlogSerializer(queryset, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SearchBlogView(APIView):
+	def post(self, request, format=None):
+		keyword = request.data.get('title')
+		queryset = Blog.objects.filter(title__icontains=keyword)
+		serializer = BlogSerializer(queryset, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+		

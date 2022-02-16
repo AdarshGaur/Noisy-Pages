@@ -12,7 +12,6 @@ from blog.models import Blog
 
 
 class UserDetail(APIView):
-	
 	def get(self, request, pk, format=None):
 		try:
 			user = MyUser.objects.get(pk=pk)
@@ -35,7 +34,6 @@ class UpdateAvatar(APIView):
 			serializer.save()
 			return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class UserFollow(APIView):
@@ -91,10 +89,17 @@ class MySavedBlogs(APIView):
 
 class MyBlogs(APIView):
 	permission_classes = [permissions.IsAuthenticated]
-	
 	def get(self, request, format=None):
 		user = request.user
 		queryset = Blog.objects.filter(author=user)
-		serializer = BlogSerializer(queryset, many=True, context={'request':request})
-		return Response(serializer.data)
+		serializer = BlogSerializer(queryset, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UsersBlogs(APIView):
+	def get(self, request, pk, format=None):
+		author = MyUser.objects.get(pk=pk)
+		queryset = Blog.objects.filter(author=author)
+		serializer = BlogSerializer(queryset, many=True)
+		return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -5,7 +5,6 @@ from .models import *
 
 class BlogSerializer(serializers.ModelSerializer):
 	read_time = serializers.SerializerMethodField()
-	likes_count = serializers.SerializerMethodField()
 	is_liked = serializers.SerializerMethodField()
 	is_bookmark = serializers.SerializerMethodField()
 	is_author = serializers.SerializerMethodField()
@@ -32,9 +31,6 @@ class BlogSerializer(serializers.ModelSerializer):
 		length = len(blog.content)
 		minutes = math.floor(length/150)
 		return minutes
-	
-	def get_likes_count(self, blog):
-		return blog.likers.count()
 	
 	def get_is_liked(self, blog):
 		return self.context.get('is_liked')

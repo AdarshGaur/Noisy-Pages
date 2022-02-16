@@ -40,7 +40,7 @@ class UserManager(BaseUserManager):
 def user_img_path(instance, filename):
 	return '/'.join(['avatars', instance.email, filename])
 
-#change about attribute to textfield !
+
 class MyUser(AbstractUser):
 	# regex validators
 	name_regex 		= RegexValidator('^[a-zA-Z ]+$', 'Only letters and spaces are allowed in Name.')
@@ -51,7 +51,7 @@ class MyUser(AbstractUser):
 	name 			= models.CharField(blank=False, max_length=50,validators=[name_regex])
 	date_joined 	= models.DateTimeField(auto_now_add=True)
 	last_login 		= models.DateTimeField(auto_now=True)
-	about 			= models.CharField(max_length=300, blank=True, null=True)
+	about 			= models.TextField(max_length=500, blank=True, null=True)
 	followers 		= models.ManyToManyField('self', blank=True, symmetrical=False, related_name='followed_by')
 	avatar 			= models.ImageField(upload_to=user_img_path, default='default-avatar.png')
 	bookmarks	 	= models.ManyToManyField(Blog, blank=True, related_name='my_bookmarks')
