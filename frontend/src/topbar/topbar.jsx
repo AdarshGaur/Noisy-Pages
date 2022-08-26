@@ -1,5 +1,6 @@
 import React from "react"
 import "./topbar.css"
+import logo from "../assets/logo.png"
 
 export default function Topbar(){
 	return(
@@ -7,7 +8,7 @@ export default function Topbar(){
 			<div className="topRight">
 				<img
 					className="topImage"
-					src={require("./logo.png")}
+					src = {logo}
 					alt="logo" 
 				/>
 				<i class="topSearchIcon fa-solid fa-magnifying-glass"></i>
