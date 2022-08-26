@@ -8,6 +8,7 @@
 	display: flex;
 	align-items: center;
 	font-family: 'Josefin Sans', sans-serif;
+	z-index: 99;
 }
 
 .topLeft,.topRight{
@@ -25,7 +26,7 @@
 .topIcon{
 	font-size: 20px;
 	margin-right: 20px;
-	color: rgb(44, 40, 40);
+	color: #444;
 }
 
 .topList{
@@ -43,6 +44,10 @@
 	cursor: pointer;
 }
 
+.topListItem:hover {
+	color: gray;
+}
+
 .topImage{
 	width: 40px;
 	height: 40px;
@@ -52,7 +57,7 @@
 
 .topSearchIcon{
 	font-size: 18px;
-	color: grey;
+	color: #666;
 	cursor: pointer;
 	margin-left: 200px;
 }
