@@ -9,7 +9,7 @@ import Single from "./pages/single/Single";
 
 
 function App() {
-	const currentUser = false
+	const user = false
 	return (
 		<Router>
 			<Topbar />
@@ -21,6 +21,9 @@ function App() {
 				<Route path="/post/:id" element={<Single />} />
 				<Route path="/write" element={currentUser ? <Write /> : <Login />} />
 				<Route path="/settings" element={currentUser ? <Settings /> : <Login />} />
+				<Route path="/post/:postId">
+					<Single />
+				</Route>
 			</Routes>
 		</Router>
 	);
