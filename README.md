@@ -1,2 +1,2 @@
 # Noisy-Pages
-A Simple Blog Site.
+Noisy Pages is a Single Page Application which is developed in Django Rest Framework and ReactJs.
